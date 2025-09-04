@@ -1,0 +1,144 @@
+openapi: 3.0.3
+info:
+  title: Catalog Service
+  version: 1.0.0
+servers:
+  - url: http://localhost:8081
+paths:
+  /api/products:
+    get:
+      summary: List products
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Product' }
+    post:
+      summary: Create product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Product' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+  /api/products/{id}:
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Product' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      summary: Update product (no stock)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductUpdate' }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Product' } } } }
+        '400': { $ref: '#/components/responses/BusinessError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/products/{id}/stock:
+    post:
+      summary: Add stock
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: OK }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/purchases:
+    post:
+      summary: Purchase product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId, quantity]
+              properties:
+                productId: { type: string }
+                quantity: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/BusinessError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+components:
+  schemas:
+    Product:
+      type: object
+      required: [id, name, price, stock]
+      properties:
+        id: { type: string }
+        name: { type: string, pattern: '^[a-zA-Z0-9 ]+$' }
+        price: { type: number, format: double, minimum: 0 }
+        stock: { type: integer, minimum: 0 }
+    ProductCreate:
+      allOf: [ { $ref: '#/components/schemas/Product' } ]
+      required: [name, price, stock]
+      properties:
+        id: { readOnly: true }
+    ProductUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        price: { type: number, format: double, minimum: 0 }
+  responses:
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+    BusinessError:
+      description: Business rule violation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+              fields:
+                type: object
+                additionalProperties: { type: string }
