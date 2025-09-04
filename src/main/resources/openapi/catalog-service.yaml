@@ -1,144 +1,188 @@
 openapi: 3.0.3
 info:
-  title: Catalog Service
+  title: Catalog Service API
   version: 1.0.0
+  description: REST API for managing products in MongoDB
+
 servers:
   - url: http://localhost:8081
+    description: Local development server
+
 paths:
   /api/products:
     get:
-      summary: List products
+      summary: List all products
       responses:
         '200':
-          description: OK
+          description: List of products
           content:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/Product' }
+                items:
+                  $ref: '#/components/schemas/Product'
     post:
-      summary: Create product
+      summary: Create a new product
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/ProductCreate' }
+            schema:
+              $ref: '#/components/schemas/ProductCreateDto'
       responses:
         '201':
-          description: Created
+          description: Product created
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Product' }
-        '400': { $ref: '#/components/responses/ValidationError' }
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+
   /api/products/{id}:
     get:
+      summary: Get product by ID
       parameters:
-        - in: path
-          name: id
+        - name: id
+          in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Product' } } } }
-        '404': { $ref: '#/components/responses/NotFound' }
+        '200':
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
     put:
-      summary: Update product (no stock)
+      summary: Update product by ID
       parameters:
-        - in: path
-          name: id
+        - name: id
+          in: path
           required: true
-          schema: { type: string }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/ProductUpdate' }
-      responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Product' } } } }
-        '400': { $ref: '#/components/responses/BusinessError' }
-        '404': { $ref: '#/components/responses/NotFound' }
-  /api/products/{id}/stock:
-    post:
-      summary: Add stock
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string }
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [amount]
-              properties:
-                amount: { type: integer, minimum: 1 }
+              $ref: '#/components/schemas/ProductUpdateDto'
       responses:
-        '200': { description: OK }
-        '404': { $ref: '#/components/responses/NotFound' }
-  /api/purchases:
-    post:
-      summary: Purchase product
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [productId, quantity]
-              properties:
-                productId: { type: string }
-                quantity: { type: integer, minimum: 1 }
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete product by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        '200': { description: OK }
-        '400': { $ref: '#/components/responses/BusinessError' }
-        '404': { $ref: '#/components/responses/NotFound' }
+        '204':
+          description: Product deleted
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   schemas:
     Product:
       type: object
-      required: [id, name, price, stock]
       properties:
-        id: { type: string }
-        name: { type: string, pattern: '^[a-zA-Z0-9 ]+$' }
-        price: { type: number, format: double, minimum: 0 }
-        stock: { type: integer, minimum: 0 }
-    ProductCreate:
-      allOf: [ { $ref: '#/components/schemas/Product' } ]
-      required: [name, price, stock]
+        id:
+          type: string
+        name:
+          type: string
+          pattern: "^[a-zA-Z0-9\\s-_.]+$"
+        price:
+          type: number
+          format: double
+      required: [id, name, price]
+
+    ProductCreateDto:
+      type: object
+      required: [ name, price, stock ]
       properties:
-        id: { readOnly: true }
-    ProductUpdate:
+        name:
+          type: string
+          pattern: "^[a-zA-Z0-9\\s-_.]+$"
+          example: "Laptop"
+        price:
+          type: number
+          format: double
+          minimum: 0.01
+          example: 999.99
+        stock:
+          type: integer
+          minimum: 0
+          example: 10
+
+    ProductUpdateDto:
+      type: object
+      required: [ name, price ]
+      properties:
+        name:
+          type: string
+          pattern: "^[a-zA-Z0-9\\s-_.]+$"
+          example: "Laptop Pro"
+        price:
+          type: number
+          format: double
+          minimum: 0.01
+          example: 1099.99
+
+    ErrorResponse:
       type: object
       properties:
-        name: { type: string }
-        price: { type: number, format: double, minimum: 0 }
-  responses:
-    NotFound:
-      description: Not found
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              error: { type: string }
-    BusinessError:
-      description: Business rule violation
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              error: { type: string }
-    ValidationError:
-      description: Validation failed
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              error: { type: string }
-              fields:
-                type: object
-                additionalProperties: { type: string }
+        status: { type: integer }
+        error: { type: string }
+        message: { type: string }
+        path: { type: string }
+        timestamp: { type: string, format: date-time }
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        status: { type: integer }
+        error: { type: string }
+        message: { type: string }
+        path: { type: string }
+        timestamp: { type: string, format: date-time }
+        fields:
+          type: object
+          additionalProperties:
+            type: string

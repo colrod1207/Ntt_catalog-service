@@ -25,4 +25,8 @@ public class Product {
     @NotNull(message = "price is required")
     @DecimalMin(value = "0.00", message = "price must be >= 0.00")
     private BigDecimal price;
+
+    @NotNull(message = "stock is required")
+    @DecimalMin(value = "1", message = "stock must be > 0")
+    private Integer stock;
 }
