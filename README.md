@@ -18,7 +18,7 @@ src/
 │   │       ├── web/            (REST controllers)
 │   │       ├── exception/      (Custom exceptions)
 │   └── resources/application.properties     (App configuration)
-│               openapi/catalog-api.yaml  (OpenAPI contract)
+│               openapi/catalog-service.yaml  (OpenAPI contract)
 ├──test/
 │   └── java/
 │       └── org/taller01/catalogservice/service/
@@ -58,7 +58,7 @@ http://localhost:8081/swagger-ui.html
 
 The OpenAPI contract is located at:
 
-src/main/resources/openapi/catalog-api.yaml
+src/main/resources/openapi/catalog-service.yaml
 
 It defines all endpoints, request/response schemas, validation rules, and error formats.
 
