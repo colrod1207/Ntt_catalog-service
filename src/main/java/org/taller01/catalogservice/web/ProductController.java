@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import org.taller01.catalogservice.domain.Product;
 import org.taller01.catalogservice.dto.ProductCreateDto;
 import org.taller01.catalogservice.dto.ProductUpdateDto;
+import org.taller01.catalogservice.dto.StockAdjustRequest;
+import org.taller01.catalogservice.dto.StockResponse;
 import org.taller01.catalogservice.service.ProductService;
 
 @Tag(name = "Catalog", description = "Products catalog management API")
@@ -44,5 +46,11 @@ public class ProductController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable String id) {
         service.delete(id);
+    }
+
+    @PatchMapping("/{id}/stock/adjust")
+    public StockResponse adjustStock(@PathVariable String id,
+                                     @RequestBody @Valid StockAdjustRequest req) {
+        return service.adjustStock(id, req.delta());
     }
 }

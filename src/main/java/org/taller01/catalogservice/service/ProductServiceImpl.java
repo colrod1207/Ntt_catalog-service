@@ -8,6 +8,7 @@ import org.taller01.catalogservice.domain.Product;
 import org.taller01.catalogservice.dto.ProductCreateDto;
 import org.taller01.catalogservice.dto.ProductInput;
 import org.taller01.catalogservice.dto.ProductUpdateDto;
+import org.taller01.catalogservice.dto.StockResponse; // <-- IMPORTA ESTO
 import org.taller01.catalogservice.exception.NotFoundException;
 import org.taller01.catalogservice.repository.ProductRepository;
 
@@ -62,6 +63,22 @@ public class ProductServiceImpl implements ProductService {
         repo.deleteById(id);
     }
 
+    // ==== NUEVO: ajustar stock (+/-) ====
+    @Override
+    public StockResponse adjustStock(String id, int delta) {
+        Product p = repo.findById(id)
+                .orElseThrow(() -> new NotFoundException(id));
+
+        int current = p.getStock() == null ? 0 : p.getStock();
+        int updated = current + delta;
+        if (updated < 0) {
+            throw new IllegalArgumentException("insufficient stock");
+        }
+        p.setStock(updated);
+        repo.save(p);
+        return new StockResponse(p.getId(), p.getStock());
+    }
+
     void validate(ProductInput dto) {
         if (dto.name() == null || dto.name().isBlank()) {
             throw new IllegalArgumentException("Product name is required");
@@ -70,5 +87,4 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException("Product price must be > 0.00");
         }
     }
-
 }
