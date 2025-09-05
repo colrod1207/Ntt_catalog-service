@@ -2,7 +2,6 @@ package org.taller01.catalogservice.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
-
 import java.math.BigDecimal;
 
 @Schema(description = "DTO for updating a product")
